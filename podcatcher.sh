@@ -50,11 +50,12 @@ function download_urls() {
             # Generate a proper filename
             FILE=$(deduct_filename_from_url ${PODCAST_URL})
 
-            echo ":: Downloading \"${PODCAST_URL}\" as \"${PODDROPDIR}/${FILE}\" ::"
-            curl --continue-at - --location --output ${PODDROPDIR}/${FILE} ${PODCAST_URL}
+            echo ":: Downloading \"${PODCAST_URL}\" as \"${pod}/${FILE}\" ::"
+            curl --continue-at - --location --output ${pod}/${FILE} ${PODCAST_URL}
             RC=$?
             if [ "$RC" = "0" ]; then
                 echo "${PODCAST_URL}" >> ${pod}/${TEMPLATE_SUCCESSFUL_DOWNLOAD_URLS}
+                ln -f -s ${pod}/${FILE} ${PODDROPDIR}/${FILE}
             else
                 echo "${PODCAST_URL}" >> ${pod}/${TEMPLATE_FAILED_DOWNLOAD_URLS}
             fi
