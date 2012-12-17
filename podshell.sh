@@ -1,10 +1,8 @@
 #!/bin/bash
 
-PODLIST="podcast.list"
-TMPDIR="/tmp/podget"
-PODDROPDIR="${TMPDIR}/poddropdir"
-TMPFILE="${TMPDIR}/foo.tmp"
-TOP=3
+# PODLIST="podcast.list"
+# PODDROPDIR="/tmp/poddropdir"
+# TOP=3
 
 TEMPLATE_PODLIST_FILE="podlist.xml"
 TEMPLATE_TO_DOWNLOAD_URLS="to_download.urls"
@@ -48,6 +46,12 @@ function already_downloaded() {
     URL="$1"
     POD="$2"
 
+    ## When nothing is downloaded yet, the success-file doens't exist yet
+    if [ ! -f "${POD}/${TEMPLATE_SUCCESSFUL_DOWNLOAD_URLS}" ]; then
+        return 0
+    fi
+
+    ## Lookup entry in the success-file.
     grep "${URL}" ${POD}/${TEMPLATE_SUCCESSFUL_DOWNLOAD_URLS} > /dev/null
     RC=$?
     return $RC
@@ -81,16 +85,37 @@ function download_urls() {
 
 
 function create_tmpdir() {
-    echo ":: Create \"${TMPDIR}\" ::"
-    mkdir -p "${TMPDIR}"
-
     echo ":: Create \"${PODDROPDIR}\" ::"
     mkdir -p "${PODDROPDIR}"
 }
 
 
 ### MAIN ###
+CONF_FILE="podshell.conf"
+
+while getopts c: options
+do
+    case "$options" in
+    c)  CONF_FILE="$OPTARG";;
+    *)  echo "Usage: "
+        echo "       $0 [-c <path to configuration file>"
+        exit 1;;
+    esac
+done;
+
+if [ ! -f "${CONF_FILE}" ]; then
+    echo ":: Error: The configuration file \"${CONF_FILE}\" does not exist ::"
+    exit 1
+else
+    echo ":: Using configuration file \"${CONF_FILE}\" ::"
+fi
+
+# Source config
+. "${CONF_FILE}"
+
 create_tmpdir
 download_rss
 parse_download_url_from_rss
 download_urls
+
+exit 0
