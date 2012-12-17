@@ -44,11 +44,27 @@ function parse_download_url_from_rss() {
     done
 }
 
+function already_downloaded() {
+    URL="$1"
+    POD="$2"
+
+    grep "${URL}" ${POD}/${TEMPLATE_SUCCESSFUL_DOWNLOAD_URLS} > /dev/null
+    RC=$?
+    return $RC
+}
+
 function download_urls() {
     for pod in ${PODDROPDIR}/*/; do
         cat "${pod}/${TEMPLATE_TO_DOWNLOAD_URLS}" | head -n ${TOP} | while read PODCAST_URL; do
             # Generate a proper filename
             FILE=$(deduct_filename_from_url ${PODCAST_URL})
+
+            already_downloaded "${PODCAST_URL}" "${pod}"
+            RC=$?
+            if [ ${RC} -eq 0 ]; then
+                echo ":: Already downloaded \"${PODCAST_URL}\" as \"${pod}/${FILE}\" ::"
+                continue
+            fi
 
             echo ":: Downloading \"${PODCAST_URL}\" as \"${pod}/${FILE}\" ::"
             curl --continue-at - --location --output ${pod}/${FILE} ${PODCAST_URL}
